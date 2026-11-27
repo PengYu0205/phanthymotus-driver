@@ -1,5 +1,25 @@
 # 启元 Q1 探索版
 
+## 内置表情扩展（待真机播放验收）
+
+分支 `feat/q1-expression` 基于 PR #584 的电池驱动提交 `16e578f7`，仅增加 expression 卡。原有 battery 保留，不引入其他人的语音、关节或动作控制实现。
+
+- `info`：查询 PlayEmotion 服务和 33 个内置表情，不改变屏幕。
+- `play`：选择 emotion，播放一次，priority=0。
+- `reset`：播放平静表情一次，不是硬件复位，不保证覆盖系统高优先级内容。
+
+画布生命周期 start/stop 不触发播放。状态类表情只改变显示，不执行拍照、充电等对应功能。服务 code=0 且业务 status=1 时返回 accepted，不宣称动画播放完成；发出请求后超时返回 unknown，不自动重试播放。
+
+厂商 DDS 在隔离子进程中初始化，避免影响 Motus 数据域。当前本地与机载 7 项契约测试通过，已验证 Core 注册；实际服务探测曾超时，尚未验收真实屏幕播放。ARM64 源码构建也需在兼容环境另行验证。
+
+在仓库根目录执行：
+
+```bash
+PYTHONPATH=primebot/q1 python3 -m unittest discover -s primebot/q1/tests -p test_expression.py -v
+```
+
+本分支已补充入口、卡片元数据、Dockerfile 与部署脚本的构建清单。向官方提交时注明依赖 PR #584；本分支不更新机器人部署或其他待验收分支。
+
 `battery` 是只读传感器卡。在 Motus 画布添加「启元 Q1 探索版 → battery」后，打开「查看数据流」可查看实时电池读数。驱动启动后，卡片每 0.5 秒向 Core 发布一次 JSON，默认话题为 `/primebot_q1/battery`，格式为 `data/json`。
 
 数据来自 `/aima/hal/bms/state`（`aimdk_msgs/msg/Bms`）。画布 JSON 的 `battery` 对象包含以下字段。

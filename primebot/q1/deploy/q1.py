@@ -38,7 +38,7 @@ def build(args):
         (context / "common").mkdir()
         for name in ("__init__.py", "vendor_runtime.py", "logsafe.py"):
             shutil.copyfile(common / name, context / "common" / name)
-        for name in ("Dockerfile", "main.py", "robot.py", "battery.py", "config.yaml"):
+        for name in ("Dockerfile", "main.py", "robot.py", "battery.py", "config.yaml", "expression.py"):
             shutil.copyfile(DRIVER / name, context / name)
         (context / "deploy").mkdir()
         shutil.copyfile(DEPLOY / "service.yml", context / "deploy/service.yml")
