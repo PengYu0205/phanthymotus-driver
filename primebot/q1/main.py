@@ -1,10 +1,13 @@
 """Motus MCP entry point for the PrimeBot Q1 Explorer."""
 from common.vendor_runtime import run_driver
 from battery import BatteryCard
+from joints import JointsCard
 
 
 def build_plugins(config, namespace, ros):
-    return [BatteryCard(namespace, ros, config["ros"]["robot_domain_id"])]
+    robot_domain = config["ros"]["robot_domain_id"]
+    return [BatteryCard(namespace, ros, robot_domain),
+            JointsCard(namespace, ros, robot_domain)]
 
 
 if __name__ == "__main__":

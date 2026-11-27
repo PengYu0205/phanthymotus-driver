@@ -1,5 +1,25 @@
 # 启元 Q1 探索版
 
+## 独立关节卡扩展
+
+本分支 `feat/q1-joints` 以 PR #584 来源提交 `16e578f7d2fb2a8ac3892e22b0b58f397f90a798` 为基线，仅增加 joints/model。原有 battery 保留，不包含表情、独立 IMU 卡、麦克风、ASR 或姿态控制。
+
+`joints` 订阅 `/aima/hal/joint/state`，按名称校验 22 个活动关节，20 Hz 发布 `/primebot_q1/state/joints`，格式 `sensor/skeleton`。字段包括 q（rad）、dq（rad/s）、tau（N·m）、温度、源时间戳及 waiting/live/stale/error。关节卡内部订阅原始 IMU，将归一化的 wxyz 四元数放入 imu_quat，无须添加或连接另一张 IMU 卡；姿态超过 0.5 秒失效，关节超过 1 秒失效。该映射沿用调试设备以 pelvis 为参考的配置，其他固件仍需核对。
+
+`model` 返回配套精简 Q1 v3 URDF，只含运动学结构，不含实体 mesh 或动力学惯量，不用于仿真训练。模型来自用户提供的 q1_v3 包；公开发布前需确认再分发许可。
+
+已有 Core 骨架渲染器可使用本分支数据。实体模型、叠加模式和自动取景属于 Core 配套改动，保留于父项目的 core-changes 补丁包，不放入 Driver 分支。
+
+### 验证与已知问题
+
+已完成 6 项无需 ROS 的契约测试。此前机载验证曾收到 22 关节、约 20 Hz 及姿态数据；后续发现肘部角度显示差异时，实际数据为 waiting，不能宣称已完成肘角精度验收。等待数据时现有前端可能显示默认或旧姿态，后续须先恢复 live，再核对零位、方向和模型匹配。
+
+```bash
+PYTHONPATH=primebot/q1 python3 -m unittest discover -s primebot/q1/tests -p test_joints.py -v
+```
+
+镜像及启动脚本均已加入 joints.py 和 q1_v3.urdf。ARM64 镜像仍需在适配环境构建验证，本次未修改机器人运行环境。
+
 `battery` 是只读传感器卡。在 Motus 画布添加「启元 Q1 探索版 → battery」后，打开「查看数据流」可查看实时电池读数。驱动启动后，卡片每 0.5 秒向 Core 发布一次 JSON，默认话题为 `/primebot_q1/battery`，格式为 `data/json`。
 
 数据来自 `/aima/hal/bms/state`（`aimdk_msgs/msg/Bms`）。画布 JSON 的 `battery` 对象包含以下字段。
